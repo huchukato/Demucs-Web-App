@@ -1,40 +1,92 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from typing import Tuple, Union
-import os
 from pathlib import Path
 from demucs.pretrained import get_model, SOURCES
 from demucs.audio import AudioFile, save_audio
 from demucs.apply import apply_model
 import torch
+import torchaudio
+from torchaudio.pipelines import HDEMUCS_HIGH_MUSDB_PLUS
 import numpy as np
 from werkzeug.utils import secure_filename
+import io
+import os
 
-# Print available sources and models
-print("Available sources:", SOURCES)
-print("Available models:")
-for name in ['demucs', 'demucs_extra', 'mdx', 'mdx_extra', 'htdemucs']:
-    try:
-        model = get_model(name)
-        print(f"- {name}: {model.__class__.__name__}")
-    except Exception as e:
-        print(f"- {name}: Not available ({str(e)})")
-
+# Configurazione iniziale
 app = Flask(__name__)
 CORS(app)
 
-# Try to load the 'htdemucs' model, if it fails, use 'mdx_extra' as fallback
-try:
-    model = get_model('htdemucs')
-    print("Successfully loaded 'htdemucs' model")
-except Exception as e:
-    print(f"Failed to load 'htdemucs': {str(e)}")
-    print("Attempting to load 'mdx_extra' as fallback...")
-    model = get_model('mdx_extra')
-    print("Successfully loaded 'mdx_extra' model")
+# Configurazione del device (GPU se disponibile, altrimenti CPU)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def initialize_model() -> Union[torch.nn.Module, None]:
+    """
+    Inizializza il modello Demucs, tentando prima htdemucs e fallendo su mdx_extra.
+    Returns:
+        torch.nn.Module or None: Il modello caricato
+    """
+    try:
+        model = get_model('htdemucs')
+        print("Successfully loaded 'htdemucs' model")
+        return model.to(device)
+    except Exception as e:
+        print(f"Failed to load 'htdemucs': {str(e)}")
+        print("Attempting to load 'mdx_extra' as fallback...")
+        try:
+            model = get_model('mdx_extra')
+            print("Successfully loaded 'mdx_extra' model")
+            return model.to(device)
+        except Exception as e:
+            print(f"Failed to load 'mdx_extra': {str(e)}")
+            return None
+
+def list_available_models():
+    """
+    Lista i modelli disponibili e le loro informazioni.
+    Solo per scopi di debugging.
+    """
+    print("Available sources:", SOURCES)
+    print("Available models:")
+    for name in ['demucs', 'demucs_extra', 'mdx', 'mdx_extra', 'htdemucs']:
+        try:
+            model = get_model(name)
+            print(f"- {name}: {model.__class__.__name__}")
+        except Exception as e:
+            print(f"- {name}: Not available ({str(e)})")
+
+# Inizializzazione del modello
+model = initialize_model()
+if model is None:
+    raise RuntimeError("Failed to initialize any model")
+
+# Per debugging, commentare in produzione
+if app.debug:
+    list_available_models()
+
+# Qui puoi aggiungere i tuoi endpoint Flask
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Endpoint per verificare lo stato del servizio"""
+    return jsonify({
+        "status": "healthy",
+        "model": model.__class__.__name__,
+        "device": str(device)
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+bundle = HDEMUCS_HIGH_MUSDB_PLUS
+model = bundle.get_model()
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model.to(device)
+sample_rate = bundle.sample_rate
+print(f"Sample rate: {sample_rate}")
 
 model.cpu()
 model.eval()
+
 
 @app.route('/process', methods=['POST'])
 def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:

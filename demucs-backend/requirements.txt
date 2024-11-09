@@ -2,5 +2,6 @@ Flask==2.0.1
 Flask-CORS==3.0.10
 torch==2.2.1
 torchvision==0.17.1
-demucs==3.0.4
+demucs==4.0.1
+mir_eval==0.7
 werkzeug==2.0.1

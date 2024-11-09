@@ -3,23 +3,24 @@ import { Music4, Mic, Drum, Guitar, Radio } from 'lucide-react';
 import { UploadZone } from './components/UploadZone';
 import { TrackList } from './components/TrackList';
 import type { Track } from './types';
+
 function App() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileSelect = useCallback(async (file: File) => {
     setIsUploading(true);
-  
+
     // Crea una nuova richiesta HTTP per inviare il file audio al backend
     const formData = new FormData();
     formData.append('file', file);
-  
+
     try {
       const response = await fetch('http://localhost:5000/process', {
         method: 'POST',
         body: formData,
       });
-  
+
       // Verifica se la risposta è stata ricevuta correttamente
       if (response.ok) {
         const data = await response.json();
@@ -39,7 +40,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-3xl" />
-        
+
         <div className="relative container mx-auto px-4 py-16">
           <div className="text-center mb-16">
             <div className="flex items-center justify-center space-x-3 mb-6">
@@ -53,7 +54,7 @@ function App() {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
               Separate your music into individual stems using advanced AI technology
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
               {[
                 { icon: <Mic className="w-6 h-6" />, label: 'Vocals' },
