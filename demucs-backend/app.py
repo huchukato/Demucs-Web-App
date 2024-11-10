@@ -90,8 +90,6 @@ model.eval()
 
 @app.route('/process', methods=['POST'])
 def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
-    file_path = None
-    stems = []
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file part'}), 400
@@ -104,7 +102,7 @@ def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
         if not filename:
             return jsonify({'error': 'Invalid filename'}), 400
         
-        file_path = Path('/src') / filename  # Use a source directory
+        file_path = Path('/src') / filename  # Usa una directory di origine
         file.save(str(file_path))
         
         print(f"File saved to {file_path}")  # Debug print
@@ -136,7 +134,8 @@ def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
         sources = apply_model(model, audio, device='cpu', progress=True)
         print(f"Model inference complete, sources shape: {sources.shape}")  # Debug print
         
-        for idx, (source, name) in enumerate(zip(sources[0], model.sources)):
+        stems = []
+        for idx, (source, name) in enumerate(zip(sources, model.sources)):
             stem_path = file_path.parent / f'{filename}_{name}.wav'
             save_audio(source, str(stem_path), samplerate=model.samplerate)
             stems.append(str(stem_path))
@@ -146,7 +145,7 @@ def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
     except Exception as e:
         print(f"Error in process_audio: {str(e)}")  # Debug print
         import traceback
-        traceback.print_exc()  # This will print the full stack trace
+        traceback.print_exc()  # Stampa la traccia dello stack
         return jsonify({'error': str(e)}), 500
     finally:
         # Clean up: remove the original file and stems

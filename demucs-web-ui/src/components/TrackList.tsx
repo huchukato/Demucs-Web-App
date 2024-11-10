@@ -1,76 +1,63 @@
-import React from 'react';
-import { Download, Music2, Video, Loader2 } from 'lucide-react';
-import type { Track } from '../types';
-import { VideoPreview } from './VideoPreview';
+import { FC } from 'react';
+import { Music4 } from 'lucide-react';
+import { Track } from '../types'; // Importa il tipo Track da types.ts
 
-interface Props {
+interface TrackListProps {
   tracks: Track[];
 }
 
-export function TrackList({ tracks }: Props) {
+export const TrackList: FC<TrackListProps> = ({ tracks }) => {
   if (tracks.length === 0) {
     return null;
   }
 
   return (
-    <div className="w-full max-w-2xl space-y-4">
-      {tracks.map((track) => (
-        <div
-          key={track.id}
-          className="bg-white rounded-lg shadow-md p-4 space-y-3"
-        >
-          <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      <h2 className="text-2xl font-semibold text-gray-800">Processed Tracks</h2>
+      <div className="grid gap-4">
+        {tracks.map((track) => (
+          <div
+            key={track.id}
+            className="bg-white rounded-lg shadow-md p-6 space-y-4"
+          >
             <div className="flex items-center space-x-3">
-              {track.file?.type.startsWith('video/') ? (
-                <Video className="text-blue-500" />
-              ) : (
-                <Music2 className="text-blue-500" />
-              )}
-              <span className="font-medium">{track.name}</span>
+              <div className="bg-blue-100 rounded-lg p-2">
+                <Music4 className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800">{track.name}</h3>
             </div>
-            <span className="text-sm text-gray-500 capitalize">{track.status}</span>
+
+            {track.status === 'completed' && track.result && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {Object.entries(track.result).map(([stemName, stemUrl]) => {
+                  if (typeof stemUrl !== 'string') return null;
+                  return (
+                    <div
+                      key={stemName}
+                      className="bg-gray-50 rounded-lg p-4 space-y-2"
+                    >
+                      <h4 className="font-medium text-gray-700 capitalize">
+                        {stemName}
+                      </h4>
+                      <audio controls className="w-full" src={stemUrl}>
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {track.status !== 'completed' && (
+              <div className="text-gray-600">
+                {track.status === 'processing' && 'Processing...'}
+                {track.status === 'uploading' && 'Uploading...'}
+                {track.status === 'error' && `Error: ${track.error}`}
+              </div>
+            )}
           </div>
-
-          {track.file?.type.startsWith('video/') && (
-            <VideoPreview file={track.file} />
-          )}
-
-          {track.status === 'processing' && (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                <span className="text-sm text-gray-600">Processing: {track.progress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${track.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {track.status === 'completed' && track.result && (
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(track.result).map(([stem, url]) => (
-                <a
-                  key={stem}
-                  href={url}
-                  download={`${track.name}-${stem}.wav`}
-                  className="flex items-center justify-center space-x-2 p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span className="capitalize">{stem}</span>
-                </a>
-              ))}
-            </div>
-          )}
-
-          {track.status === 'error' && (
-            <p className="text-sm text-red-500">{track.error}</p>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
-}
+};
