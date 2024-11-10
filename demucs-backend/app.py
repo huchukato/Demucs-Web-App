@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
 from typing import Tuple, Union
 from pathlib import Path
@@ -14,7 +14,7 @@ import io
 import os
 
 # Configurazione iniziale
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 CORS(app)
 
 # Configurazione del device (GPU se disponibile, altrimenti CPU)
@@ -64,7 +64,10 @@ if model is None:
 if app.debug:
     list_available_models()
 
-# Qui puoi aggiungere i tuoi endpoint Flask
+@app.route('/')
+def home():
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Endpoint per verificare lo stato del servizio"""
@@ -74,24 +77,8 @@ def health_check():
         "device": str(device)
     })
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
-bundle = HDEMUCS_HIGH_MUSDB_PLUS
-model = bundle.get_model()
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model.to(device)
-sample_rate = bundle.sample_rate
-print(f"Sample rate: {sample_rate}")
-
-model.cpu()
-model.eval()
-
-
 @app.route('/process', methods=['POST'])
 def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
-    file_path = None
-    stems = []
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file part'}), 400
@@ -104,7 +91,7 @@ def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
         if not filename:
             return jsonify({'error': 'Invalid filename'}), 400
         
-        file_path = Path('/src') / filename  # Use a source directory
+        file_path = Path('/src') / filename  # Usa una directory di origine
         file.save(str(file_path))
         
         print(f"File saved to {file_path}")  # Debug print
@@ -136,7 +123,8 @@ def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
         sources = apply_model(model, audio, device='cpu', progress=True)
         print(f"Model inference complete, sources shape: {sources.shape}")  # Debug print
         
-        for idx, (source, name) in enumerate(zip(sources[0], model.sources)):
+        stems = []
+        for idx, (source, name) in enumerate(zip(sources, model.sources)):
             stem_path = file_path.parent / f'{filename}_{name}.wav'
             save_audio(source, str(stem_path), samplerate=model.samplerate)
             stems.append(str(stem_path))
@@ -146,7 +134,7 @@ def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
     except Exception as e:
         print(f"Error in process_audio: {str(e)}")  # Debug print
         import traceback
-        traceback.print_exc()  # This will print the full stack trace
+        traceback.print_exc()  # Stampa la traccia dello stack
         return jsonify({'error': str(e)}), 500
     finally:
         # Clean up: remove the original file and stems
