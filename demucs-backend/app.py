@@ -1,45 +1,21 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from demucs.pretrained import get_model
-from demucs.audio import AudioFile, save_audio
-from demucs.apply import apply_model
-import torch
-import numpy as np  # Importa numpy
+import demucs.separate
+import shlex
 import os
 from pathlib import Path
 from werkzeug.utils import secure_filename
+import requests  # Importa l'API requests
 
 # Configurazione iniziale
 app = Flask(__name__, static_folder=os.path.abspath('static'), static_url_path='')
 CORS(app)
 
-print(f"Static folder absolute path: {os.path.abspath('static')}")
+print(f"Static folder path: {app.static_folder}")
 
-# Configurazione del device (GPU se disponibile, altrimenti CPU)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-def initialize_model():
-    try:
-        model = get_model('htdemucs')
-        print("Successfully loaded 'htdemucs' model")
-        return model.to(device)
-    except Exception as e:
-        print(f"Failed to load 'htdemucs': {str(e)}")
-        print("Attempting to load 'mdx_extra' as fallback...")
-        try:
-            model = get_model('mdx_extra')
-            print("Successfully loaded 'mdx_extra' model")
-            return model.to(device)
-        except Exception as e:
-            print(f"Failed to load 'mdx_extra': {str(e)}")
-            return None
-
-model = initialize_model()
-if model is None:
-    raise RuntimeError("Failed to initialize any model")
-
-@app.route('/')
-def home():
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
     try:
         return send_from_directory(app.static_folder, 'index.html')
     except Exception as e:
@@ -49,14 +25,11 @@ def home():
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({
-        "status": "healthy",
-        "model": model.__class__.__name__,
-        "device": str(device)
+        "status": "healthy"
     })
 
 @app.route('/process', methods=['POST'])
 def process_audio():
-    stems = []  # Inizializza la variabile stems
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file part'}), 400
@@ -69,41 +42,27 @@ def process_audio():
         if not filename:
             return jsonify({'error': 'Invalid filename'}), 400
 
-        file_path = Path('/src') / filename
-        file.save(str(file_path))
+        # Aggiorna il percorso per salvare i file nella directory corretta
+        file_path = Path('/teamspace/studios/this_studio/Demucs-Web-App/demucs-backend/src') / filename
+        try:
+            file.save(str(file_path))
+            print(f"File saved to {file_path}")
+        except Exception as e:
+            print(f"Error saving file: {str(e)}")
+            return jsonify({'error': 'Failed to save file'}), 500
 
-        print(f"File saved to {file_path}")
+        # Esegui il comando di separazione di Demucs senza l'opzione --two-stems
+        try:
+            demucs.separate.main(shlex.split(f'--mp3 -n mdx_extra "{file_path}"'))
+            print(f"Separation complete for {file_path}")
+        except Exception as e:
+            print(f"Error executing Demucs separation: {str(e)}")
+            return jsonify({'error': 'Failed to separate audio file'}), 500
 
-        audio = AudioFile(file_path).read(samplerate=model.samplerate, channels=model.audio_channels)
-        print(f"Audio read, type: {type(audio)}")
-
-        if isinstance(audio, (float, int)):
-            audio = torch.tensor([[[audio]]])
-        elif isinstance(audio, np.ndarray):
-            audio = torch.from_numpy(audio)
-            if audio.dim() == 1:
-                audio = audio.unsqueeze(0).unsqueeze(0)
-            elif audio.dim() == 2:
-                audio = audio.unsqueeze(1)
-        elif isinstance(audio, torch.Tensor):
-            if audio.dim() == 1:
-                audio = audio.unsqueeze(0).unsqueeze(0)
-            elif audio.dim() == 2:
-                audio = audio.unsqueeze(1)
-        else:
-            raise ValueError(f"Unexpected audio type: {type(audio)}")
-
-        print(f"Processed audio shape: {audio.shape}")
-
-        print("Starting model inference")
-        sources = apply_model(model, audio, device=device, progress=True)
-        print(f"Model inference complete, sources shape: {sources.shape}")
-
-        for idx, (source, name) in enumerate(zip(sources, model.sources)):
-            stem_path = file_path.parent / f'{filename}_{name}.wav'
-            save_audio(source, str(stem_path), samplerate=model.samplerate)
-            stems.append(str(stem_path))
-            print(f"Saved stem {idx+1}/{len(model.sources)}: {stem_path}")
+        # Trova i file separati
+        separated_dir = file_path.parent / 'separated' / 'mdx_extra' / file_path.stem
+        stems = {stem.stem: str(stem) for stem in separated_dir.glob('*.mp3')}
+        print(f"Separated stems: {stems}")
 
         return jsonify({'message': 'Processing complete', 'stems': stems}), 200
     except Exception as e:
@@ -114,10 +73,14 @@ def process_audio():
     finally:
         if file_path and file_path.exists():
             file_path.unlink()
-        for stem in stems:
-            stem_path = Path(stem)
-            if stem_path.exists():
-                stem_path.unlink()
 
 if __name__ == '__main__':
+    # Esegui una richiesta HTTP utilizzando l'API requests
+    url = "https://5000-01jc2hgbfh9harp7vdddrbt76a.cloudspaces.litng.ai/"
+    response = requests.get(url)
+    if response.status_code == 200:
+        print("Response:", response.text)
+    else:
+        print(f"Request failed with status code {response.status_code}.")
+
     app.run(debug=True)

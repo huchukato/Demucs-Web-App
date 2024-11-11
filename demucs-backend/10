@@ -1,0 +1,38 @@
+Channels:
+ - defaults
+ - conda-forge
+ - nvidia
+ - pytorch
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: /home/zeus/miniconda3/envs/cloudspace
+
+  added / updated specs:
+    - cudatoolkit
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    cudatoolkit-11.8.0         |       h6a678d5_0       630.7 MB
+    ------------------------------------------------------------
+                                           Total:       630.7 MB
+
+The following packages will be SUPERSEDED by a higher-priority channel:
+
+  certifi            conda-forge/noarch::certifi-2024.8.30~ --> pkgs/main/linux-64::certifi-2024.8.30-py39h06a4308_0 
+  cudatoolkit        conda-forge::cudatoolkit-11.8.0-h4ba9~ --> pkgs/main::cudatoolkit-11.8.0-h6a678d5_0 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... By downloading and using the CUDA Toolkit conda packages, you accept the terms and conditions of the CUDA End User License Agreement (EULA): https://docs.nvidia.com/cuda/eula/index.html
+
+done
