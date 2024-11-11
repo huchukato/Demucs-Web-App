@@ -16,7 +16,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:5000/process', {
+      const response = await fetch('https://5000-01jc2hgbfh9harp7vdddrbt76a.cloudspaces.litng.ai/process', {
         method: 'POST',
         body: formData,
       });
