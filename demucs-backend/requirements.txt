@@ -21,3 +21,6 @@ pyyaml
 submitit
 treetable
 soundfile>=0.10.3
+gunicorn
+numpy==1.26.4
+requests

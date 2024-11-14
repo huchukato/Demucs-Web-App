@@ -1,45 +1,41 @@
-import React from 'react';
-import { Download, Waves } from 'lucide-react';
-
 interface StemCardProps {
   name: string;
   url: string;
   color: string;
+  onDownload: () => void;
 }
 
-export function StemCard({ name, url, color }: StemCardProps) {
-  const handleDownload = () => {
-    window.open(url, '_blank');
-  };
-
+export function StemCard({ name, color, onDownload }: StemCardProps) {
   return (
-    <div className="bg-gray-800 rounded-xl p-6 hover:shadow-lg hover:shadow-pink-500/10 transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <div className={`w-3 h-3 rounded-full ${color} mr-3`}></div>
-          <h3 className="text-xl font-semibold">{name}</h3>
+    <div className={`p-6 rounded-lg border border-white/10 backdrop-blur-sm 
+      transition-all duration-300 hover:scale-[1.02] hover:border-white/20`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`w-4 h-4 rounded-full ${color}`} />
+          <h3 className="text-lg font-semibold">{name}</h3>
         </div>
-        <button 
-          className="p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200"
-          onClick={handleDownload}
-          title={`Download ${name} stem`}
+        
+        <button
+          onClick={onDownload}
+          className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 
+            transition-colors duration-200 flex items-center gap-2"
         >
-          <Download className="w-5 h-5" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Download
         </button>
-      </div>
-      
-      <div className="bg-gray-700 rounded-lg p-4 h-24 flex items-center justify-center">
-        <Waves className="w-full h-12 text-gray-500" />
-      </div>
-      
-      <div className="mt-4">
-        <audio 
-          controls 
-          className="w-full"
-          src={url}
-        >
-          Your browser does not support the audio element.
-        </audio>
       </div>
     </div>
   );

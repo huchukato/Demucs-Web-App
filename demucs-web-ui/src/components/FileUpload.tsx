@@ -1,22 +1,34 @@
-import React from 'react';
+import { useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { Upload, Loader2 } from 'lucide-react';
 
 interface FileUploadProps {
   isProcessing: boolean;
-  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileUpload: (file: File) => void;
 }
 
 export function FileUpload({ isProcessing, onFileUpload }: FileUploadProps) {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      onFileUpload(acceptedFiles[0]);
+    }
+  }, [onFileUpload]);
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop, accept: { 'audio/*': [] } });
+
   return (
     <div className="max-w-xl mx-auto mb-12">
-      <label 
-        className={`
-          flex flex-col items-center justify-center w-full h-48 
-          border-2 border-dashed rounded-xl 
-          ${isProcessing ? 'border-gray-600 bg-gray-800/50' : 'border-pink-500 hover:bg-gray-800/50 cursor-pointer'}
-          transition-all duration-300
-        `}
+      <div 
+        {...getRootProps({
+          className: `
+            flex flex-col items-center justify-center w-full h-48 
+            border-2 border-dashed rounded-xl 
+            ${isProcessing ? 'border-gray-600 bg-gray-800/50' : 'border-pink-500 hover:bg-gray-800/50 cursor-pointer'}
+            transition-all duration-300
+          `
+        })}
       >
+        <input {...getInputProps()} disabled={isProcessing} />
         <div className="flex flex-col items-center justify-center pt-5 pb-6">
           {isProcessing ? (
             <>
@@ -32,14 +44,7 @@ export function FileUpload({ isProcessing, onFileUpload }: FileUploadProps) {
             </>
           )}
         </div>
-        <input 
-          type="file" 
-          className="hidden" 
-          accept="audio/*"
-          onChange={onFileUpload}
-          disabled={isProcessing}
-        />
-      </label>
+      </div>
     </div>
   );
 }
