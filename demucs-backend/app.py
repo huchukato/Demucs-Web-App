@@ -1,149 +1,106 @@
-from flask import Flask, request, jsonify, Response, send_from_directory
-from flask_cors import CORS
-from typing import Tuple, Union
-from pathlib import Path
-from demucs.pretrained import get_model, SOURCES
-from demucs.audio import AudioFile, save_audio
-from demucs.apply import apply_model
-import torch
-import torchaudio
-from torchaudio.pipelines import HDEMUCS_HIGH_MUSDB_PLUS
-import numpy as np
-from werkzeug.utils import secure_filename
-import io
-import os
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
 
-# Configurazione iniziale
-app = Flask(__name__, static_folder='static')
-CORS(app)
+events {
+    worker_connections 768;
+    # multi_accept on;
+}
 
-# Configurazione del device (GPU se disponibile, altrimenti CPU)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+http {
 
-def initialize_model() -> Union[torch.nn.Module, None]:
-    """
-    Inizializza il modello Demucs, tentando prima htdemucs e fallendo su mdx_extra.
-    Returns:
-        torch.nn.Module or None: Il modello caricato
-    """
-    try:
-        model = get_model('htdemucs')
-        print("Successfully loaded 'htdemucs' model")
-        return model.to(device)
-    except Exception as e:
-        print(f"Failed to load 'htdemucs': {str(e)}")
-        print("Attempting to load 'mdx_extra' as fallback...")
-        try:
-            model = get_model('mdx_extra')
-            print("Successfully loaded 'mdx_extra' model")
-            return model.to(device)
-        except Exception as e:
-            print(f"Failed to load 'mdx_extra': {str(e)}")
-            return None
+    ##
+    # Basic Settings
+    ##
 
-def list_available_models():
-    """
-    Lista i modelli disponibili e le loro informazioni.
-    Solo per scopi di debugging.
-    """
-    print("Available sources:", SOURCES)
-    print("Available models:")
-    for name in ['demucs', 'demucs_extra', 'mdx', 'mdx_extra', 'htdemucs']:
-        try:
-            model = get_model(name)
-            print(f"- {name}: {model.__class__.__name__}")
-        except Exception as e:
-            print(f"- {name}: Not available ({str(e)})")
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    # server_tokens off;
 
-# Inizializzazione del modello
-model = initialize_model()
-if model is None:
-    raise RuntimeError("Failed to initialize any model")
+    # server_names_hash_bucket_size 64;
+    # server_name_in_redirect off;
 
-# Per debugging, commentare in produzione
-if app.debug:
-    list_available_models()
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
 
-@app.route('/')
-def home():
-    return send_from_directory(app.static_folder, 'index.html')
+    ##
+    # SSL Settings
+    ##
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Endpoint per verificare lo stato del servizio"""
-    return jsonify({
-        "status": "healthy",
-        "model": model.__class__.__name__,
-        "device": str(device)
-    })
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+    ssl_prefer_server_ciphers on;
 
-@app.route('/process', methods=['POST'])
-def process_audio() -> Union[Tuple[Response, int], Tuple[str, int]]:
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
-        
-        file = request.files['file']
-        if file.filename is None or file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-        
-        filename = secure_filename(file.filename)
-        if not filename:
-            return jsonify({'error': 'Invalid filename'}), 400
-        
-        file_path = Path('/src') / filename  # Usa una directory di origine
-        file.save(str(file_path))
-        
-        print(f"File saved to {file_path}")  # Debug print
-        
-        # Read audio file
-        audio = AudioFile(file_path).read(samplerate=model.samplerate, channels=model.audio_channels)
-        print(f"Audio read, type: {type(audio)}")  # Debug print
-        
-        # Convert to tensor and ensure correct shape
-        if isinstance(audio, (float, int)):
-            audio = torch.tensor([[[audio]]])
-        elif isinstance(audio, np.ndarray):
-            audio = torch.from_numpy(audio)
-            if audio.dim() == 1:
-                audio = audio.unsqueeze(0).unsqueeze(0)
-            elif audio.dim() == 2:
-                audio = audio.unsqueeze(1)
-        elif isinstance(audio, torch.Tensor):
-            if audio.dim() == 1:
-                audio = audio.unsqueeze(0).unsqueeze(0)
-            elif audio.dim() == 2:
-                audio = audio.unsqueeze(1)
-        else:
-            raise ValueError(f"Unexpected audio type: {type(audio)}")
-        
-        print(f"Processed audio shape: {audio.shape}")  # Debug print
-        
-        print("Starting model inference")  # Debug print
-        sources = apply_model(model, audio, device='cpu', progress=True)
-        print(f"Model inference complete, sources shape: {sources.shape}")  # Debug print
-        
-        stems = []
-        for idx, (source, name) in enumerate(zip(sources, model.sources)):
-            stem_path = file_path.parent / f'{filename}_{name}.wav'
-            save_audio(source, str(stem_path), samplerate=model.samplerate)
-            stems.append(str(stem_path))
-            print(f"Saved stem {idx+1}/{len(model.sources)}: {stem_path}")  # Debug print
-        
-        return jsonify({'message': 'Processing complete', 'stems': stems}), 200
-    except Exception as e:
-        print(f"Error in process_audio: {str(e)}")  # Debug print
-        import traceback
-        traceback.print_exc()  # Stampa la traccia dello stack
-        return jsonify({'error': str(e)}), 500
-    finally:
-        # Clean up: remove the original file and stems
-        if file_path and file_path.exists():
-            file_path.unlink()
-        for stem in stems:
-            stem_path = Path(stem)
-            if stem_path.exists():
-                stem_path.unlink()
+    ##
+    # Logging Settings
+    ##
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    ##
+    # Gzip Settings
+    ##
+
+    gzip on;
+
+    # gzip_vary on;
+    # gzip_proxied any;
+    # gzip_comp_level 6;
+    # gzip_buffers 16 8k;
+    # gzip_http_version 1.1;
+    # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    ##
+    # Virtual Host Configs
+    ##
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+
+    ##
+    # Reverse Proxy Config
+    ##
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        location / {
+            proxy_pass http://127.0.0.1:5000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+            internal;
+        }
+    }
+}
+
+#mail {
+#       # See sample authentication script at:
+#       # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+# 
+#       # auth_http localhost/auth.php;
+#       # pop3_capabilities "TOP" "USER";
+#       # imap_capabilities "IMAP4rev1" "UIDPLUS";
+# 
+#       server {
+#               listen     localhost:110;
+#               protocol   pop3;
+#               proxy      on;
+#       }
+# 
+#       server {
+#               listen     localhost:143;
+#               protocol   imap;
+#               proxy      on;
+#       }
+#}
