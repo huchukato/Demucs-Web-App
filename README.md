@@ -1,6 +1,6 @@
-# Demucs GUI
+# Demucs Web App
 
-Un'interfaccia grafica per Demucs, uno strumento per la separazione delle tracce musicali. Questa applicazione permette di caricare un file audio e separarlo nelle sue componenti: voce, batteria, basso e altri strumenti.
+Un'applicazione web full stack per Demucs, uno strumento per la separazione delle tracce musicali. Questa applicazione permette di caricare un file audio e separarlo nelle sue componenti: voce, batteria, basso e altri strumenti.
 
 ## 🚀 Caratteristiche
 
@@ -16,17 +16,17 @@ Un'interfaccia grafica per Demucs, uno strumento per la separazione delle tracce
 - npm (Node Package Manager)
 - Git
 
-## 💻 Installazione Rapida
+## 💻 Installazione
+
+### Installazione Rapida per Linux e macOS
 
 1. Clona il repository:
-
 ```bash
-git clone <url-del-repository>
-cd demucs-gui
+git clone https://github.com/huchukato/demucs-web-app.git
+cd demucs-web-app
 ```
 
-2. Esegui lo script di installazione automatica:
-
+2. Esegui lo script di installazione:
 ```bash
 chmod +x install_and_run.sh
 ./install_and_run.sh
@@ -37,22 +37,20 @@ chmod +x install_and_run.sh
 http://localhost:5173
 ```
 
-## 🛠 Installazione Manuale
+### Installazione Manuale (Per tutti i sistemi operativi)
 
-Se preferisci installare manualmente, segui questi passaggi:
+Se preferisci installare manualmente o stai usando Windows:
 
-### Backend
-
+#### Backend
 ```bash
 cd demucs-backend
 python3 -m venv .venv
 source .venv/bin/activate  # Su Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-gunicorn -c gunicorn_config.py app:app
+gunicorn -c gunicorn_config.py app:app  # Su Windows: python app.py
 ```
 
-### Frontend
-
+#### Frontend
 ```bash
 cd demucs-gui
 npm install
