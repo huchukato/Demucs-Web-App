@@ -19,13 +19,11 @@ def file_too_large(error):
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20MB in bytes
 
 # Define base directories
-BASE_DIR = Path('/teamspace/studios/this_studio/Demucs-Web-App/demucs-backend')
+BASE_DIR = Path(__file__).parent.absolute()
 UPLOAD_FOLDER = BASE_DIR / 'temp'
-SEPARATED_DIR = BASE_DIR / 'separated'
 
-# Ensure directories exist
+# Ensure directory exists
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-SEPARATED_DIR.mkdir(parents=True, exist_ok=True)
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -141,4 +139,4 @@ def cleanup_old_files():
         print(f"Error during cleanup: {str(e)}")
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

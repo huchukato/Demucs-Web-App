@@ -2,7 +2,7 @@ Flask==2.0.1
 Flask-CORS==3.0.10
 tqdm>=4.36
 torch>=1.8.1
-torchaudio>=0.8,<2.2
+torchaudio>=0.8
 demucs==4.0.1
 mir_eval==0.7
 werkzeug==2.0.1

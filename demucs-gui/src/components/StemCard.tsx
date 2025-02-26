@@ -1,6 +1,6 @@
- import { Download, Waves } from 'lucide-react';
+import { Download, Waves } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://5000-01jcm8y85taewnh1dh4tmyywmd.cloudspaces.litng.ai';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 interface StemCardProps {
   name: string;

@@ -1,0 +1,22 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Directory temporanee
+temp/
+
+# File di cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Log files
+*.log
+gunicorn.log
+error.log
+access.log
+app.log
+
+# File di sistema
+.DS_Store 
