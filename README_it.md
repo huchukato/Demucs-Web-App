@@ -32,7 +32,7 @@ Scarica l'installer per la tua piattaforma dalla pagina [Releases](https://githu
 |---|---|---|
 | macOS (Apple Silicon) | `Stemify-<ver>-arm64.dmg` | Primo avvio: tasto destro → Apri (app non firmata) |
 | Windows | `Stemify Setup <ver>.exe` | x64 |
-| Linux | `Stemify-<ver>.AppImage` | x64 |
+| Linux | `Stemify-<ver>.AppImage` / `.deb` | x64 |
 
 L'app include il proprio backend Python (PyInstaller) — il modello Demucs (~84 MB) viene scaricato automaticamente al primo utilizzo.
 

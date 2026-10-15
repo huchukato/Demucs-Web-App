@@ -39,12 +39,6 @@
           "arch": [
             "arm64"
           ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "arm64"
-          ]
         }
       ]
     },
@@ -64,6 +58,12 @@
       "target": [
         {
           "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
           "arch": [
             "x64"
           ]

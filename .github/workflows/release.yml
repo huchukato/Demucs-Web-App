@@ -82,9 +82,9 @@ jobs:
           name: stemify-${{ matrix.platform }}
           path: |
             demucs-gui/release/*.dmg
-            demucs-gui/release/*.zip
             demucs-gui/release/*.exe
             demucs-gui/release/*.AppImage
+            demucs-gui/release/*.deb
             demucs-gui/release/*.blockmap
           if-no-files-found: error
 
@@ -111,14 +111,14 @@ jobs:
             |---|---|
             | macOS (Apple Silicon) | `Stemify-*-arm64.dmg` |
             | Windows (x64) | `Stemify Setup *.exe` |
-            | Linux (x64) | `Stemify-*.AppImage` |
+            | Linux (x64) | `Stemify-*.AppImage` / `.deb` |
 
             The Demucs model (~84 MB) is downloaded automatically on first use.
             macOS: first launch requires right-click → Open (unsigned app).
           generate_release_notes: true
           files: |
             artifacts/**/*.dmg
-            artifacts/**/*.zip
             artifacts/**/*.exe
             artifacts/**/*.AppImage
+            artifacts/**/*.deb
             artifacts/**/*.blockmap
