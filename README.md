@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="demucs-gui/public/logo.png" alt="Stemify - The Audio Splitter" width="300">
+  <img src="img/stemify-hor.png" alt="Stemify - The Audio Splitter" width="420">
 </p>
 
 # Stemify - The Audio Splitter
@@ -9,123 +9,119 @@
 [![React](https://img.shields.io/badge/React-19+-61DAFB.svg)](https://reactjs.org)
 [![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com)
 [![AI](https://img.shields.io/badge/AI-Demucs%20v4-purple.svg)](https://github.com/facebookresearch/demucs)
-[![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Desktop%20%7C%20Web-lightgrey.svg)]()
 
-A web application for audio track separation. This application allows you to upload an audio file and separate it into its components: vocals, drums, bass, and other instruments.
+Split any song into **vocals, drums, bass and instrumental** with AI — available as a **desktop app** (macOS, Windows, Linux) or as a **self-hosted web app**.
 
-## 🚀 Features
+## ✨ Features
 
-- Intuitive web interface
-- Real-time track separation using AI
-- Audio preview of separated tracks
-- Download individual tracks
-- Support for various audio formats
-- Fast processing with Demucs v4
+- 🖥️ **Desktop app** — native Electron app with bundled Python backend, no setup required
+- 🎚️ **AI stem separation** — Facebook Research Demucs v4 (htdemucs)
+- 📊 **BPM & musical key detection** — automatically analyzed and embedded in the filenames
+- 📈 **Real-time progress bar** — track the separation percentage as it runs
+- 🎹 **Built-in library** — all your past separations, ready to replay, re-download or delete
+- 🌊 **Interactive waveforms** — click-to-seek custom player for every stem
+- 📦 **One-click ZIP download** — all stems in a single archive named after the song
+- ⚡ **GPU acceleration** — Metal (MPS) on Apple Silicon with automatic CPU fallback
 
-## 📋 Prerequisites
+## 📥 Desktop App
 
-- Python 3.12 or higher
-- uv (Python package manager) - install it with: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- npm (Node Package Manager)
-- Git
+Download the installer for your platform from the [Releases](https://github.com/huchukato/stemify-audio-splitter/releases) page:
 
-## 💻 Installation
+| Platform | File | Notes |
+|---|---|---|
+| macOS (Apple Silicon) | `Stemify-<ver>-arm64.dmg` | First launch: right-click → Open (unsigned app) |
+| Windows | `Stemify Setup <ver>.exe` | x64 |
+| Linux | `Stemify-<ver>.AppImage` | x64 |
 
-### Quick Installation for Linux and macOS
+The app bundles its own Python backend (PyInstaller) — the Demucs model (~84 MB) is downloaded automatically on first use.
 
-1. Clone the repository:
+### Build the desktop app yourself
+
+```bash
+cd demucs-gui
+npm install
+npm run electron-build   # builds frontend + PyInstaller backend + electron-builder
+```
+
+Artifacts land in `demucs-gui/release/`.
+
+## 🌐 Web App (self-hosted)
+
+### Prerequisites
+
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- npm (Node.js 18+)
+
+### Quick start (Linux / macOS)
+
 ```bash
 git clone https://github.com/huchukato/stemify-audio-splitter.git
 cd stemify-audio-splitter
-```
-
-2. Run the installation script:
-```bash
-chmod +x linux_mac_install_run.sh
 ./linux_mac_install_run.sh
 ```
 
-3. Open your browser and navigate to `http://localhost:5173`
+Then open `http://localhost:5173`.
 
-### Manual Installation
+### Windows
 
-1. **Backend Setup:**
-```bash
-cd demucs-backend
-uv sync
-mkdir -p temp separated
-uv run python -m gunicorn --bind 0.0.0.0:5001 --workers 1 --timeout 120 app:app
+```powershell
+git clone https://github.com/huchukato/stemify-audio-splitter.git
+cd stemify-audio-splitter
+.\win_install_run.bat
 ```
 
-2. **Frontend Setup** (in another terminal):
+### Manual
+
 ```bash
+# Backend
+cd demucs-backend
+uv sync
+uv run python -m gunicorn --bind 0.0.0.0:5001 --workers 1 --timeout 600 app:app
+
+# Frontend (another terminal)
 cd demucs-gui
 npm install
 npm run dev
 ```
 
-3. Open your browser and navigate to `http://localhost:5173`
-
 ## 🎵 How to Use
 
-1. Upload an audio file (MP3, WAV, FLAC, etc.)
-2. Wait for the AI to process and separate the tracks
-3. Preview each separated track
-4. Download the individual tracks you want
+1. Drop an MP3 (up to 20 MB) into the app
+2. Watch the progress bar while the AI separates the stems
+3. Preview each stem with the built-in player (click the waveform to seek)
+4. Download single stems or the whole ZIP — filenames include BPM and key, e.g. `Song-83bpm-Emajor-vocals.mp3`
+5. Find every past separation in the **Library** — replay, re-download or delete
 
-## 🛠️ Technology Stack
+## 🛠️ Tech Stack
 
-- **Backend:** Flask + Demucs v4
-- **Frontend:** React + Vite + Tailwind CSS
-- **Audio Processing:** Facebook's Demucs v4 model
+- **Backend:** Flask + waitress + Demucs v4 + librosa (BPM/key analysis)
+- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS
+- **Desktop:** Electron + electron-builder + PyInstaller
 - **Package Management:** uv (Python), npm (Node.js)
 
-### Windows Installation
+## 📁 Project Structure
 
-1. Clone the repository:
-```powershell
-git clone https://github.com/huchukato/stemify-audio-splitter.git
-cd stemify-audio-splitter
 ```
-
-2. Run the installation script:
-```powershell
-.\win_install_run.bat
+├── demucs-backend/     # Flask API server (uv project)
+├── demucs-gui/         # React frontend + Electron desktop app
+├── packaging/          # PyInstaller entry point for the bundled backend
+├── img/                # Brand assets (logo, icons, background)
+└── linux_mac_install_run.sh / win_install_run.bat
 ```
-
-3. Open your browser and navigate to `http://localhost:5173`
-
-## 🎵 How to Use
-
-1. Upload an audio file (MP3, WAV, FLAC, etc.)
-2. Wait for the AI to process and separate the tracks
-3. Preview each separated track
-4. Download the individual tracks you want
 
 ## 🔧 Troubleshooting
 
-- **Backend not starting:** Make sure port 5001 is not in use
-- **Frontend not loading:** Check that npm installed successfully
-- **Audio processing fails:** Ensure the audio file is under 20MB
+- **Backend not starting:** make sure port 5001 is not in use
+- **Slow separation:** on macOS the app falls back to CPU if Metal is unavailable — a reboot usually restores GPU acceleration
+- **Audio processing fails:** ensure the file is under 20 MB
 
-## �️ Security
+## 🔒 Security
 
-This project maintains a strong security posture with regular vulnerability assessments and prompt patching.
+Regular audits via automated Dependabot monitoring, prompt patching and transparent disclosure.
 
-### **Recent Security Fixes:**
-- ✅ **March 2026**: Complete security audit resolution
-  - Fixed all 15+ vulnerabilities via npm audit
-  - Updated rollup (CVE-2026-27606), tar (CVE-2026-26960), minimatch (CVE-2026-27903)
-  - Resolved all HIGH and MODERATE severity alerts
-  - **Status**: 0 vulnerabilities (npm audit)
-
-### **Security Practices:**
-- 🔍 **Regular Audits**: Automated Dependabot monitoring
-- 🚀 **Prompt Updates**: Security patches applied immediately
-- 📋 **Vulnerability Disclosure**: Transparent security reporting
-- 🔒 **Secure Dependencies**: All packages kept up-to-date
-
-## �📝 License
+## 📝 License
 
 This project is open source and available under the [MIT License](LICENSE).
 

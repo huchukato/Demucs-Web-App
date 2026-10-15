@@ -131,6 +131,18 @@ def process_job(job_id, session_id, file_path, filename, original_name):
             save_audio(wav, str(new_file_path), separator.samplerate, bitrate=320, preset=2)
             stems[label] = f'/download/{session_id}/{new_filename}'
 
+        # Salva i metadati della sessione per la library
+        import json
+        meta = {
+            'track_name': original_name,
+            'bpm': analysis.get('bpm'),
+            'key': analysis.get('key'),
+            'created_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
+            'stems': stems,
+        }
+        with open(session_folder / 'meta.json', 'w') as f:
+            json.dump(meta, f)
+
         with JOBS_LOCK:
             JOBS[job_id]['state'] = 'done'
             JOBS[job_id]['progress'] = 100
@@ -252,6 +264,50 @@ def cleanup_session(session_id):
     except Exception as e:
         print(f"Error cleaning up session: {str(e)}")
         return jsonify({'error': 'Cleanup failed'}), 500
+
+@app.route('/library', methods=['GET'])
+def get_library():
+    """Lista delle sessioni di separazione salvate (le piu' recenti prima)."""
+    import json
+    items = []
+    try:
+        for session_folder in UPLOAD_FOLDER.iterdir():
+            meta_file = session_folder / 'meta.json'
+            if not session_folder.is_dir() or not meta_file.exists():
+                continue
+            try:
+                with open(meta_file) as f:
+                    meta = json.load(f)
+                # Verifica che i file stem esistano ancora
+                if not all((session_folder / Path(url).name).exists() for url in meta.get('stems', {}).values()):
+                    continue
+                items.append({
+                    'session_id': session_folder.name,
+                    'track_name': meta.get('track_name', 'Unknown'),
+                    'bpm': meta.get('bpm'),
+                    'key': meta.get('key'),
+                    'created_at': meta.get('created_at'),
+                    'stems': meta.get('stems', {}),
+                })
+            except Exception as e:
+                print(f"Error reading meta for {session_folder.name}: {e}")
+        items.sort(key=lambda x: x.get('created_at') or '', reverse=True)
+        return jsonify({'library': items})
+    except Exception as e:
+        print(f"Error listing library: {str(e)}")
+        return jsonify({'error': 'Library listing failed'}), 500
+
+@app.route('/library', methods=['DELETE'])
+def clear_library():
+    """Cancella tutte le sessioni salvate."""
+    try:
+        for session_folder in UPLOAD_FOLDER.iterdir():
+            if session_folder.is_dir():
+                shutil.rmtree(session_folder)
+        return jsonify({'message': 'Library cleared'}), 200
+    except Exception as e:
+        print(f"Error clearing library: {str(e)}")
+        return jsonify({'error': 'Library clear failed'}), 500
 
 @app.route('/download/<session_id>/<filename>')
 def download_file(session_id, filename):

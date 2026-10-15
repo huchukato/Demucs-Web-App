@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Stemify</title>
+  <style>
+    :root {
+      --bg: #0b0812;
+      --pink: #ec4899;
+      --purple: #a855f7;
+      --text: #cfc9e0;
+    }
+    * { margin: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 28px;
+      user-select: none;
+      -webkit-app-region: drag;
+    }
+    .title {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .bar {
+      width: 300px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(236, 72, 153, 0.15);
+      overflow: hidden;
+      position: relative;
+    }
+    .bar::after {
+      content: "";
+      position: absolute;
+      top: 0; left: -40%;
+      width: 40%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0%   { left: -40%; }
+      100% { left: 110%; }
+    }
+    .status {
+      font-size: 13px;
+      color: rgba(207, 201, 224, 0.65);
+    }
+  </style>
+</head>
+<body>
+  <div class="title">STEMIFY</div>
+  <div class="bar"></div>
+  <div class="status" id="status">Starting backend…</div>
+  <script>
+    const el = document.getElementById("status");
+    if (window.stemify?.onBackendStatus) {
+      window.stemify.onBackendStatus((msg) => { el.textContent = msg; });
+    }
+  </script>
+</body>
+</html>

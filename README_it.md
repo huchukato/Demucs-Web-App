@@ -1,123 +1,138 @@
 <p align="center">
-  <img src="demucs-gui/public/logo.png" alt="Stemify - The Audio Splitter" width="300">
+  <img src="img/stemify-hor.png" alt="Stemify - The Audio Splitter" width="420">
 </p>
 
 # Stemify - The Audio Splitter
 
-Un'applicazione web full stack per la separazione delle tracce audio. Questa applicazione permette di caricare un file audio e separarlo nelle sue componenti: voce, batteria, basso e altri strumenti.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org)
+[![React](https://img.shields.io/badge/React-19+-61DAFB.svg)](https://reactjs.org)
+[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com)
+[![AI](https://img.shields.io/badge/AI-Demucs%20v4-purple.svg)](https://github.com/facebookresearch/demucs)
+[![Platform](https://img.shields.io/badge/Platform-Desktop%20%7C%20Web-lightgrey.svg)]()
 
-## 🚀 Caratteristiche
+Separa qualsiasi brano in **voce, batteria, basso e strumentale** con l'AI — disponibile come **app desktop** (macOS, Windows, Linux) o come **app web self-hosted**.
 
-- Interfaccia web intuitiva
-- Separazione delle tracce in tempo reale
-- Anteprima audio delle tracce separate
-- Download delle singole tracce
-- Supporto per vari formati audio
+## ✨ Funzionalità
 
-## 📋 Prerequisiti
+- �️ **App desktop** — app Electron nativa con backend Python incluso, nessuna configurazione richiesta
+- 🎚️ **Separazione stem con AI** — Facebook Research Demucs v4 (htdemucs)
+- 📊 **Rilevamento BPM e tonalità** — analizzati automaticamente e inclusi nei nomi dei file
+- 📈 **Barra di avanzamento in tempo reale** — percentuale di completamento durante l'elaborazione
+- 🎹 **Library integrata** — tutte le tue separazioni passate, pronte da riascoltare, riscaricare o eliminare
+- 🌊 **Waveform interattive** — player custom con seek cliccando sulla waveform
+- 📦 **Download ZIP con un click** — tutti gli stem in un unico archivio col nome della canzone
+- ⚡ **Accelerazione GPU** — Metal (MPS) su Apple Silicon con fallback CPU automatico
 
-- Python 3.12 o superiore
-- uv (Python package manager) - installalo con: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- npm (Node Package Manager)
-- Git
+## 📥 App Desktop
 
-## 💻 Installazione
+Scarica l'installer per la tua piattaforma dalla pagina [Releases](https://github.com/huchukato/stemify-audio-splitter/releases):
 
-### Installazione Rapida per Linux e macOS
+| Piattaforma | File | Note |
+|---|---|---|
+| macOS (Apple Silicon) | `Stemify-<ver>-arm64.dmg` | Primo avvio: tasto destro → Apri (app non firmata) |
+| Windows | `Stemify Setup <ver>.exe` | x64 |
+| Linux | `Stemify-<ver>.AppImage` | x64 |
 
-1. Clona il repository:
+L'app include il proprio backend Python (PyInstaller) — il modello Demucs (~84 MB) viene scaricato automaticamente al primo utilizzo.
+
+### Compila l'app desktop da solo
+
+```bash
+cd demucs-gui
+npm install
+npm run electron-build   # compila frontend + backend PyInstaller + electron-builder
+```
+
+Gli artifact finiscono in `demucs-gui/release/`.
+
+## 🌐 App Web (self-hosted)
+
+### Prerequisiti
+
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- npm (Node.js 18+)
+
+### Avvio rapido (Linux / macOS)
+
 ```bash
 git clone https://github.com/huchukato/stemify-audio-splitter.git
 cd stemify-audio-splitter
+./linux_mac_install_run.sh
 ```
 
-2. Esegui lo script di installazione:
+Poi apri `http://localhost:5173`.
+
+### Windows
+
+```powershell
+git clone https://github.com/huchukato/stemify-audio-splitter.git
+cd stemify-audio-splitter
+.\win_install_run.bat
+```
+
+### Manuale
+
 ```bash
-chmod +x install_and_run.sh
-./install_and_run.sh
-```
-
-3. Apri il browser e vai a:
-```
-http://localhost:5173
-```
-
-### Installazione Manuale (Per tutti i sistemi operativi)
-
-Se preferisci installare manualmente o stai usando Windows:
-
-#### Backend
-```bash
+# Backend
 cd demucs-backend
 uv sync
-uv run gunicorn --bind 0.0.0.0:5001 --workers 1 --timeout 120 app:app  # Su Windows: uv run python app.py
-```
+uv run python -m gunicorn --bind 0.0.0.0:5001 --workers 1 --timeout 600 app:app
 
-#### Frontend
-```bash
+# Frontend (altro terminale)
 cd demucs-gui
 npm install
 npm run dev
 ```
 
-## 🏗 Struttura del Progetto
+## � Come si usa
+
+1. Trascina un MP3 (max 20 MB) nell'app
+2. Guarda la barra di avanzamento mentre l'AI separa gli stem
+3. Anteprima di ogni stem con il player integrato (clicca la waveform per il seek)
+4. Scarica i singoli stem o lo ZIP completo — i nomi dei file includono BPM e tonalità, es. `Song-83bpm-Emajor-vocals.mp3`
+5. Trova tutte le separazioni passate nella **Library** — riascolta, riscarica o elimina
+
+## 🛠️ Stack Tecnologico
+
+- **Backend:** Flask + waitress + Demucs v4 + librosa (analisi BPM/tonalità)
+- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS
+- **Desktop:** Electron + electron-builder + PyInstaller
+- **Gestione pacchetti:** uv (Python), npm (Node.js)
+
+## 📁 Struttura del Progetto
 
 ```
-demucs-gui/
-├── demucs-backend/     # Server Flask
-│   ├── app.py         # Entry point del backend
-│   └── pyproject.toml
-├── demucs-gui/        # Client React
-│   ├── src/          # Codice sorgente frontend
-│   └── package.json
-└── install_and_run.sh # Script di installazione
+├── demucs-backend/     # Server API Flask (progetto uv)
+├── demucs-gui/         # Frontend React + app desktop Electron
+├── packaging/          # Entry point PyInstaller per il backend incluso
+├── img/                # Asset grafici (logo, icone, background)
+└── linux_mac_install_run.sh / win_install_run.bat
 ```
 
-## 🔧 Tecnologie Utilizzate
+## 🔧 Risoluzione Problemi
 
-- **Backend**: 
-  - Flask (Python)
-  - Gunicorn
-  - Demucs
+- **Il backend non parte:** assicurati che la porta 5001 non sia occupata
+- **Separazione lenta:** su macOS l'app passa a CPU se Metal non è disponibile — un riavvio di solito ripristina l'accelerazione GPU
+- **Elaborazione fallita:** assicurati che il file sia sotto 20 MB
 
-- **Frontend**:
-  - React
-  - TypeScript
-  - Vite
-  - Tailwind CSS
+## 🔒 Sicurezza
 
-## 🤝 Contribuire
-
-Le pull request sono benvenute. Per modifiche importanti, apri prima un issue per discutere cosa vorresti cambiare.
+Audit regolari tramite monitoraggio automatico Dependabot, patch tempestive e disclosure trasparente.
 
 ## 📝 Licenza
 
-[MIT](https://choosealicense.com/licenses/mit/)
+Questo progetto è open source e disponibile sotto [licenza MIT](LICENSE).
 
-## 👥 Autori
+## 👥 Autore
 
-- huchukato 
+- **huchukato**
   - 🐙 [GitHub](https://github.com/huchukato)
   - 🐦 [X (Twitter)](https://twitter.com/huchukato)
-  - 🎨 [Civitai](https://civitai.com/user/huchukato) - Check out my AI art models!
+  - 🎨 [Civitai](https://civitai.com/user/huchukato) - Dai un'occhiata ai miei modelli AI!
 
 ## 🙏 Ringraziamenti
 
-- [Facebook Research](https://github.com/facebookresearch/demucs) per Demucs
-
-## 🛡️ Sicurezza
-
-Questo progetto mantiene un forte posture di sicurezza con regolari valutazioni delle vulnerabilità e patch tempestive.
-
-### **Fix di Sicurezza Recenti:**
-- ✅ **Marzo 2026**: Risoluzione completa audit di sicurezza
-  - Corrette tutte le 15+ vulnerabilità tramite npm audit
-  - Aggiornato rollup (CVE-2026-27606), tar (CVE-2026-26960), minimatch (CVE-2026-27903)
-  - Risolti tutti gli alert HIGH e MODERATE severity
-  - **Stato**: 0 vulnerabilità (npm audit)
-
-### **Pratiche di Sicurezza:**
-- 🔍 **Audit Regolari**: Monitoraggio automatico Dependabot
-- 🚀 **Aggiornamenti Immediati**: Patch di sicurezza applicate subito
-- 📋 **Disclosure Trasparente**: Reporting vulnerabilità trasparente
-- 🔒 **Dipendenze Sicure**: Tutti i pacchetti mantenuti aggiornati
+- [Facebook Research](https://github.com/facebookresearch/demucs) per il modello Demucs v4
+- La community open source per gli strumenti straordinari usati in questo progetto

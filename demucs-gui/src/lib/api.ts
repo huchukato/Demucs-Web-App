@@ -148,3 +148,32 @@ export async function cleanupSession(sessionId: string): Promise<void> {
     // Non lanciamo errore, è solo cleanup
   }
 }
+
+export interface LibraryItem {
+  session_id: string;
+  track_name: string;
+  bpm: number | null;
+  key: string | null;
+  created_at: string | null;
+  stems: Record<string, string>;
+}
+
+export async function getLibrary(): Promise<LibraryItem[]> {
+  try {
+    const response = await fetch(`${API_URL}/library`);
+    if (!response.ok) return [];
+    const data = await response.json() as { library: LibraryItem[] };
+    return data.library || [];
+  } catch (error) {
+    console.warn('Failed to load library:', error);
+    return [];
+  }
+}
+
+export async function clearLibrary(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/library`, { method: 'DELETE' });
+  } catch (error) {
+    console.warn('Failed to clear library:', error);
+  }
+}

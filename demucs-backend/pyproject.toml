@@ -28,6 +28,7 @@ dependencies = [
     "treetable>=0.2.6",
     "soundfile>=0.12.0",
     "gunicorn>=21.2.0",
+    "waitress>=3.0.0",
     "numpy>=1.26.0",
     "requests>=2.33.0",
     "pydub>=0.25.1",

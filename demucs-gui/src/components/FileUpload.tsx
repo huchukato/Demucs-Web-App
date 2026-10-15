@@ -6,9 +6,10 @@ interface FileUploadProps {
   onFileUpload: (file: File) => void;
   progress: number;
   progressMessage: string;
+  hasResult: boolean;
 }
 
-export function FileUpload({ isProcessing, onFileUpload, progress, progressMessage }: FileUploadProps) {
+export function FileUpload({ isProcessing, onFileUpload, progress, progressMessage, hasResult }: FileUploadProps) {
   const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -26,7 +27,7 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
       const files = Array.from(e.dataTransfer.files);
       const mp3File = files.find(file => file.type === 'audio/mpeg');
 
-      if (mp3File && mp3File.size <= MAX_FILE_SIZE) { // 20MB limit
+      if (mp3File && mp3File.size <= MAX_FILE_SIZE) {
         onFileUpload(mp3File);
       } else {
         alert('Please upload an MP3 file under 20MB');
@@ -38,7 +39,7 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file && file.size <= MAX_FILE_SIZE) { // 20MB limit
+      if (file && file.size <= MAX_FILE_SIZE) {
         onFileUpload(file);
       } else {
         alert('Please upload an MP3 file under 20MB');
@@ -47,38 +48,57 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
     [onFileUpload]
   );
 
+  // Compact variant when results are already shown
+  if (hasResult && !isProcessing) {
+    return (
+      <div className="mt-3">
+        <input
+          id="file-upload-compact"
+          type="file"
+          className="hidden"
+          accept="audio/mpeg"
+          onChange={handleFileSelect}
+        />
+        <button
+          onClick={() => document.getElementById('file-upload-compact')?.click()}
+          className="w-full border border-dashed border-neutral-800 hover:border-neutral-600 rounded-lg py-3 flex items-center justify-center gap-2 text-sm text-neutral-500 hover:text-neutral-300 transition-colors duration-150"
+        >
+          <Upload className="w-4 h-4" />
+          Drop another MP3 here or click to browse
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-xl mx-auto mb-12">
+    <div>
       <div
         className={`
-          flex flex-col items-center justify-center w-full h-64
-          border-2 border-dashed rounded-xl
-          ${isProcessing ? 'border-gray-600 bg-gray-800/50' : 'border-pink-500 hover:bg-gray-800/50 cursor-pointer'}
-          transition-all duration-300 backdrop-blur-sm
+          flex flex-col items-center justify-center w-full h-56
+          border border-dashed rounded-lg backdrop-blur-sm
+          ${isProcessing ? 'border-neutral-800 bg-neutral-900/50' : 'border-neutral-700 bg-neutral-900/60 hover:border-neutral-500 hover:bg-neutral-900/80 cursor-pointer'}
+          transition-colors duration-150
         `}
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
       >
-        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+        <div className="flex flex-col items-center justify-center px-6">
           {isProcessing ? (
             <>
-              <div className="relative mb-4">
-                <Music4 className="w-12 h-12 text-pink-500 animate-pulse" />
-              </div>
-              <p className="text-2xl font-semibold mb-2">Processing your track</p>
-              <p className="text-sm text-gray-400 mb-4">{progressMessage || 'This may take a few minutes'}</p>
+              <Music4 className="w-8 h-8 text-pink-500 animate-pulse mb-4" />
+              <p className="text-base font-medium mb-1">Processing your track</p>
+              <p className="text-sm text-neutral-500 mb-5">{progressMessage || 'This may take a few minutes'}</p>
 
-              {/* Progress bar */}
-              <div className="w-72 max-w-full px-4">
-                <div className="w-full bg-gray-600 rounded-lg h-5 overflow-hidden border border-gray-500">
+              <div className="w-72 max-w-full">
+                <div className="w-full bg-neutral-800 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg transition-all duration-500 ease-out"
+                    className="h-full bg-pink-500 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="text-center mt-2 text-sm font-semibold text-pink-400">
+                <p className="text-center mt-2 text-xs font-medium text-neutral-400 tabular-nums">
                   {progress}%
                 </p>
               </div>
@@ -94,13 +114,13 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
                 disabled={isProcessing}
               />
               <div
-                className="bg-pink-500/10 p-4 rounded-xl mb-4 cursor-pointer"
+                className="bg-neutral-900 border border-neutral-800 p-3.5 rounded-lg mb-4 cursor-pointer"
                 onClick={() => document.getElementById('file-upload')?.click()}
               >
-                <Upload className="w-12 h-12 text-pink-500" />
+                <Upload className="w-6 h-6 text-neutral-300" />
               </div>
-              <p className="text-2xl font-semibold mb-2">Drop your track here</p>
-              <p className="text-sm text-gray-400 mb-2">MP3 files up to 20MB</p>
+              <p className="text-base font-medium mb-1">Drop your track here</p>
+              <p className="text-sm text-neutral-500">MP3 files up to 20MB</p>
             </>
           )}
         </div>

@@ -17,6 +17,8 @@ demucs-backend/*.log
 node_modules/
 dist/
 build/
+dist-electron/
+release/
 
 # Python
 __pycache__/
@@ -26,6 +28,11 @@ __pycache__/
 .Python
 .venv/
 venv/
+
+# PyInstaller
+backend-build/
+backend-dist/
+*.spec
 
 # Environment variables
 .env

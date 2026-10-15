@@ -1,6 +1,6 @@
 {
   "name": "stemify-desktop",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Stemify - The Audio Splitter (Desktop App)",
   "author": "huchukato",
   "main": "electron/main.js",
@@ -9,58 +9,63 @@
     "dev": "vite",
     "electron": "electron .",
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron-build": "npm run build && electron-builder",
+    "backend:bundle": "cd .. && uv run --with pyinstaller pyinstaller packaging/backend_entry.py --name stemify-backend --onefile --noconfirm --distpath backend-dist --workpath backend-build --paths demucs-backend --collect-submodules demucs --collect-data demucs --collect-submodules librosa --collect-data librosa",
+    "electron-build": "npm run build && npm run backend:bundle && electron-builder",
     "build": "vite build"
   },
   "build": {
     "appId": "com.stemify.app",
     "productName": "Stemify",
     "directories": {
-      "output": "dist-electron"
+      "output": "release"
     },
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "node_modules/**/*"
+      "splash.html"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend-dist",
+        "to": "."
+      }
     ],
     "mac": {
+      "icon": "icons/icon.icns",
       "category": "public.app-category.music",
       "target": [
         {
           "target": "dmg",
           "arch": [
-            "x64",
             "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "x64",
             "arm64"
           ]
         }
       ]
     },
     "win": {
+      "icon": "icons/icon.png",
       "target": [
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32",
-            "arm64"
+            "x64"
           ]
         }
       ]
     },
     "linux": {
+      "icon": "icons/icon.png",
       "target": [
         {
           "target": "AppImage",
           "arch": [
-            "x64",
-            "arm64"
+            "x64"
           ]
         }
       ]
