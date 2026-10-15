@@ -55,6 +55,7 @@
     },
     "linux": {
       "icon": "icons/icon.png",
+      "maintainer": "huchukato <noreply@github.com>",
       "target": [
         {
           "target": "AppImage",
