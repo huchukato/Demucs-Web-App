@@ -26,6 +26,12 @@ uv sync
 # Creazione delle cartelle necessarie
 mkdir -p temp separated
 
+# Installazione del Remote Script AbletonMCP (per il tasto "Send to Ableton")
+echo "🎛️  Installazione Remote Script AbletonMCP (se Ableton è presente)..."
+uvx --from ableton-mcp ableton-mcp-install-script 2>/dev/null \
+  && echo "✅ Remote Script installato — attivalo in Ableton: Settings > Link, Tempo & MIDI > Control Surface > AbletonMCP" \
+  || echo "ℹ️  Ableton non rilevato: salto l'installazione del Remote Script"
+
 # Configurazione e avvio del frontend
 echo "⚛️ Configurazione del frontend..."
 cd ../demucs-gui

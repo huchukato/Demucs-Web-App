@@ -8,11 +8,12 @@ interface StemCardProps {
   url: string;
   color: string;      // tailwind class for the dot, e.g. 'bg-pink-500'
   waveColor: string;  // hex color for the waveform, e.g. '#ec4899'
+  format?: 'wav' | 'mp3';
 }
 
 const PEAK_BARS = 160;
 
-export function StemCard({ name, url, color, waveColor }: StemCardProps) {
+export function StemCard({ name, url, color, waveColor, format = 'wav' }: StemCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const peaksRef = useRef<number[]>([]);
@@ -145,8 +146,8 @@ export function StemCard({ name, url, color, waveColor }: StemCardProps) {
         </div>
         <button
           className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 rounded-md transition-colors duration-150"
-          onClick={() => window.open(`${API_URL}${url}`, '_blank')}
-          title={`Download ${name} stem`}
+          onClick={() => window.open(`${API_URL}${url}${format === 'mp3' ? '?as=mp3' : ''}`, '_blank')}
+          title={`Download ${name} stem (${format.toUpperCase()})`}
         >
           <Download className="w-4 h-4" />
         </button>

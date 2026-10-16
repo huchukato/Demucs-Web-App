@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/stemify-hor.png" alt="Stemify - The Audio Splitter" width="420">
+  <img src="img/banner.jpg" alt="Stemify - The Audio Splitter" width="100%">
 </p>
 
 # Stemify - The Audio Splitter
@@ -22,6 +22,7 @@ Split any song into **vocals, drums, bass and instrumental** with AI — availab
 - 🎹 **Built-in library** — all your past separations, ready to replay, re-download or delete
 - 🌊 **Interactive waveforms** — click-to-seek custom player for every stem
 - 📦 **One-click ZIP download** — all stems in a single archive named after the song
+- 🎛️ **Ableton Live integration** — control Ableton with AI via the AbletonMCP server (see below)
 - ⚡ **GPU acceleration** — Metal (MPS) on Apple Silicon with automatic CPU fallback
 
 ## 📥 Desktop App
@@ -94,6 +95,35 @@ npm run dev
 4. Download single stems or the whole ZIP — filenames include BPM and key, e.g. `Song-83bpm-Emajor-vocals.mp3`
 5. Find every past separation in the **Library** — replay, re-download or delete
 
+## 🎛️ Use AI with Ableton
+
+Stemify pairs nicely with [Ableton MCP](https://github.com/ahujasid/ableton-mcp): separate a song, then let an AI assistant (Claude Desktop, Cursor, Devin) load the stems into Ableton, arrange them and compose on top.
+
+The install scripts (`linux_mac_install_run.sh` / `win_install_run.bat`) install the **AbletonMCP Remote Script** automatically. To install it manually:
+
+```bash
+uvx --from ableton-mcp ableton-mcp-install-script
+```
+
+Then in Ableton: **Settings → Link, Tempo & MIDI → Control Surface → AbletonMCP** (Input/Output: None).
+
+<p align="center">
+  <img src="img/mcp.png" alt="Ableton Live settings — AbletonMCP control surface" width="480">
+</p>
+
+To let an AI assistant control Ableton, add the MCP server to your AI client config:
+
+```json
+{
+  "mcpServers": {
+    "AbletonMCP": {
+      "command": "uvx",
+      "args": ["ableton-mcp"]
+    }
+  }
+}
+```
+
 ## 🛠️ Tech Stack
 
 - **Backend:** Flask + waitress + Demucs v4 + librosa (BPM/key analysis)
@@ -130,7 +160,7 @@ This project is open source and available under the [MIT License](LICENSE).
 - **huchukato**
   - 🐙 [GitHub](https://github.com/huchukato)
   - 🐦 [X (Twitter)](https://twitter.com/huchukato)
-  - 🎨 [Civitai](https://civitai.com/user/huchukato) - Check out my AI art models!
+  - 🎨 [Civitai](https://civitai.red/user/huchukato) - Check out my AI art models!
 
 ## 🙏 Acknowledgments
 

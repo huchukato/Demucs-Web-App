@@ -32,6 +32,15 @@ REM Create necessary folders
 if not exist temp mkdir temp
 if not exist separated mkdir separated
 
+REM Install AbletonMCP Remote Script (for the "Send to Ableton" button)
+echo 🎛️ Installing AbletonMCP Remote Script (if Ableton is present)...
+uvx --from ableton-mcp ableton-mcp-install-script >nul 2>&1
+if %errorlevel% equ 0 (
+    echo ✅ Remote Script installed - enable it in Ableton: Settings ^> Link, Tempo ^& MIDI ^> Control Surface ^> AbletonMCP
+) else (
+    echo ℹ️  Ableton not detected: skipping Remote Script installation
+)
+
 REM Setup and start frontend
 echo ⚛️ Setting up frontend...
 cd ..\demucs-gui

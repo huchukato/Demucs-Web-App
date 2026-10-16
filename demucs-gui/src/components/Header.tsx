@@ -6,7 +6,7 @@ export function Header({ serverUp }: HeaderProps) {
   return (
     <div className="flex items-center justify-between mb-10">
       <img
-        src="/stemify-hor.png"
+        src="./stemify-hor.png"
         alt="Stemify"
         className="h-9 w-auto"
       />

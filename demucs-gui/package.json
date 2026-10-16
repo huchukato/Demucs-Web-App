@@ -9,7 +9,7 @@
     "dev": "vite",
     "electron": "electron .",
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "backend:bundle": "cd .. && uv run --with pyinstaller pyinstaller packaging/backend_entry.py --name stemify-backend --onefile --noconfirm --distpath backend-dist --workpath backend-build --paths demucs-backend --collect-submodules demucs --collect-data demucs --collect-submodules librosa --collect-data librosa",
+    "backend:bundle": "cd ../demucs-backend && uv run --with pyinstaller pyinstaller ../packaging/backend_entry.py --name stemify-backend --onefile --noconfirm --distpath ../backend-dist --workpath ../backend-build --paths . --collect-submodules demucs --collect-data demucs --collect-submodules librosa --collect-data librosa --exclude-module tensorboard --exclude-module torch.utils.tensorboard",
     "electron-build": "npm run build && npm run backend:bundle && electron-builder",
     "build": "vite build"
   },

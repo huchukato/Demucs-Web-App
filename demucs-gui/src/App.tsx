@@ -34,6 +34,7 @@ export default function App() {
   const [progressMessage, setProgressMessage] = useState('');
   const [serverUp, setServerUp] = useState(true);
   const [library, setLibrary] = useState<LibraryItem[]>([]);
+  const [format, setFormat] = useState<'wav' | 'mp3'>('wav');
 
   const refreshLibrary = async () => {
     setLibrary(await getLibrary());
@@ -85,7 +86,8 @@ export default function App() {
 
   const handleDownloadAll = () => {
     if (currentSessionId) {
-      window.open(`${API_URL}/download-all/${currentSessionId}`, '_blank');
+      const q = format === 'mp3' ? '?format=mp3' : '';
+      window.open(`${API_URL}/download-all/${currentSessionId}${q}`, '_blank');
     }
   };
 
@@ -131,7 +133,7 @@ export default function App() {
       {/* Background image */}
       <div
         className="fixed inset-0 bg-cover bg-center pointer-events-none"
-        style={{ backgroundImage: "url('/background.jpg')" }}
+        style={{ backgroundImage: "url('./background.jpg')" }}
       />
       {/* Dark overlay for readability when content is shown */}
       {(hasResults || isProcessing) && (
@@ -202,6 +204,21 @@ export default function App() {
                       <span className="font-medium">{analysis.key}</span>
                     </div>
                   )}
+
+                  {/* Format toggle */}
+                  <div className="flex items-center bg-neutral-800 border border-neutral-700 rounded-md p-0.5 text-xs">
+                    {(['wav', 'mp3'] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setFormat(f)}
+                        className={`px-2.5 py-1 rounded transition-colors duration-150 uppercase tracking-wide ${
+                          format === f ? 'bg-neutral-100 text-neutral-950 font-medium' : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
                   <button
                     onClick={handleDownloadAll}
                     className="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-300 text-neutral-950 px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors duration-150"
@@ -214,7 +231,7 @@ export default function App() {
                 {/* Stems */}
                 <div className="flex flex-col gap-3 mt-3">
                   {stems.map((stem) => (
-                    <StemCard key={stem.name} {...stem} />
+                    <StemCard key={stem.name} {...stem} format={format} />
                   ))}
                 </div>
 

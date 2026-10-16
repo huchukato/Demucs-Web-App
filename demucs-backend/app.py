@@ -9,6 +9,7 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 import shutil
 import uuid
+import soundfile as sf
 
 app = Flask(__name__, static_folder=os.path.abspath('static'), static_url_path='')
 CORS(app)
@@ -121,14 +122,14 @@ def process_job(job_id, session_id, file_path, filename, original_name):
         name_suffix = f"-{suffix}" if suffix else ''
 
         set_progress(92, 'Encoding stems...')
-        # Salva gli stem come MP3
+        # Salva gli stem come WAV 16-bit (lossless, nativo Ableton)
         session_folder = UPLOAD_FOLDER / session_id
         stems = {}
         for stem_name, wav in separated.items():
             label = STEM_LABELS.get(stem_name, stem_name)
-            new_filename = f"{original_name}{name_suffix}-{label}.mp3"
+            new_filename = f"{original_name}{name_suffix}-{label}.wav"
             new_file_path = session_folder / new_filename
-            save_audio(wav, str(new_file_path), separator.samplerate, bitrate=320, preset=2)
+            save_audio(wav, str(new_file_path), separator.samplerate, bits_per_sample=16)
             stems[label] = f'/download/{session_id}/{new_filename}'
 
         # Salva i metadati della sessione per la library
@@ -309,6 +310,21 @@ def clear_library():
         print(f"Error clearing library: {str(e)}")
         return jsonify({'error': 'Library clear failed'}), 500
 
+def mp3_from_wav(wav_path, bitrate=320):
+    """Converte un WAV in MP3 al volo usando lameenc, ritorna i bytes."""
+    import numpy as np
+    import lameenc
+    data, sr = sf.read(str(wav_path), dtype='int16', always_2d=True)
+    # lameenc vuole PCM int16 interleaved
+    pcm = data.reshape(-1)
+    encoder = lameenc.Encoder()
+    encoder.set_bit_rate(bitrate)
+    encoder.set_in_sample_rate(sr)
+    encoder.set_channels(data.shape[1])
+    encoder.set_quality(2)  # 2 = highest quality
+    out = encoder.encode(pcm.tobytes()) + encoder.flush()
+    return bytes(out)
+
 @app.route('/download/<session_id>/<filename>')
 def download_file(session_id, filename):
     try:
@@ -318,10 +334,23 @@ def download_file(session_id, filename):
         if not file_path.exists():
             return jsonify({'error': 'File not found'}), 404
 
+        # ?as=mp3: conversione al volo WAV -> MP3
+        as_mp3 = request.args.get('as') == 'mp3' and file_path.suffix.lower() == '.wav'
+        if as_mp3:
+            mp3_bytes = mp3_from_wav(file_path)
+            mp3_name = file_path.with_suffix('.mp3').name
+            return send_file(
+                io.BytesIO(mp3_bytes),
+                as_attachment=True,
+                mimetype='audio/mpeg',
+                download_name=mp3_name
+            )
+
+        mimetype = 'audio/wav' if file_path.suffix.lower() == '.wav' else 'audio/mpeg'
         return send_file(
             str(file_path),
             as_attachment=True,
-            mimetype='audio/mpeg',
+            mimetype=mimetype,
             download_name=filename
         )
     except Exception as e:
@@ -330,33 +359,39 @@ def download_file(session_id, filename):
 
 @app.route('/download-all/<session_id>')
 def download_all_stems(session_id):
-    """Scarica tutti gli stem di una sessione come archivio ZIP."""
+    """Scarica tutti gli stem di una sessione come archivio ZIP (?format=mp3 per MP3)."""
     try:
         session_folder = UPLOAD_FOLDER / session_id
         if not session_folder.exists():
             return jsonify({'error': 'Session not found'}), 404
 
-        mp3_files = list(session_folder.glob('*.mp3'))
-        if not mp3_files:
+        wav_files = list(session_folder.glob('*.wav'))
+        if not wav_files:
             return jsonify({'error': 'No stems found'}), 404
 
-        # Estrae il nome della canzone dal primo file: "SongName-83bpm-Emajor-vocals.mp3" -> "SongName-83bpm-Emajor"
-        first_name = mp3_files[0].stem
-        # Rimuove il suffisso dello stem (ultima parte dopo l'ultimo '-')
+        as_mp3 = request.args.get('format') == 'mp3'
+
+        # Estrae il nome della canzone dal primo file: "SongName-83bpm-Emajor-vocals.wav" -> "SongName-83bpm-Emajor"
+        first_name = wav_files[0].stem
         parts = first_name.rsplit('-', 1)
         song_name = parts[0] if len(parts) > 1 else first_name
 
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for mp3 in mp3_files:
-                zf.write(mp3, mp3.name)
+            for wav in wav_files:
+                if as_mp3:
+                    mp3_bytes = mp3_from_wav(wav)
+                    zf.writestr(wav.with_suffix('.mp3').name, mp3_bytes)
+                else:
+                    zf.write(wav, wav.name)
 
         zip_buffer.seek(0)
+        ext = 'mp3' if as_mp3 else 'wav'
         return send_file(
             zip_buffer,
             as_attachment=True,
             mimetype='application/zip',
-            download_name=f'{song_name}-stems.zip'
+            download_name=f'{song_name}-stems-{ext}.zip'
         )
     except Exception as e:
         print(f"Error creating zip: {str(e)}")

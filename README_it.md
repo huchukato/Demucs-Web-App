@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/stemify-hor.png" alt="Stemify - The Audio Splitter" width="420">
+  <img src="img/banner.jpg" alt="Stemify - The Audio Splitter" width="100%">
 </p>
 
 # Stemify - The Audio Splitter
@@ -22,6 +22,7 @@ Separa qualsiasi brano in **voce, batteria, basso e strumentale** con l'AI — d
 - 🎹 **Library integrata** — tutte le tue separazioni passate, pronte da riascoltare, riscaricare o eliminare
 - 🌊 **Waveform interattive** — player custom con seek cliccando sulla waveform
 - 📦 **Download ZIP con un click** — tutti gli stem in un unico archivio col nome della canzone
+- 🎛️ **Integrazione Ableton Live** — controlla Ableton con l'AI tramite il server AbletonMCP (vedi sotto)
 - ⚡ **Accelerazione GPU** — Metal (MPS) su Apple Silicon con fallback CPU automatico
 
 ## 📥 App Desktop
@@ -94,6 +95,35 @@ npm run dev
 4. Scarica i singoli stem o lo ZIP completo — i nomi dei file includono BPM e tonalità, es. `Song-83bpm-Emajor-vocals.mp3`
 5. Trova tutte le separazioni passate nella **Library** — riascolta, riscarica o elimina
 
+## 🎛️ Usa l'AI con Ableton
+
+Stemify si abbina bene con [Ableton MCP](https://github.com/ahujasid/ableton-mcp): separa un brano, poi lascia che un assistente AI (Claude Desktop, Cursor, Devin) carichi gli stem in Ableton, li arrangi e componga sopra.
+
+Gli script di installazione (`linux_mac_install_run.sh` / `win_install_run.bat`) installano automaticamente il **Remote Script AbletonMCP**. Per installarlo manualmente:
+
+```bash
+uvx --from ableton-mcp ableton-mcp-install-script
+```
+
+Poi in Ableton: **Settings → Link, Tempo & MIDI → Control Surface → AbletonMCP** (Input/Output: None).
+
+<p align="center">
+  <img src="img/mcp.png" alt="Impostazioni Ableton Live — control surface AbletonMCP" width="480">
+</p>
+
+Per far controllare Ableton a un assistente AI, aggiungi il server MCP alla config del tuo client AI:
+
+```json
+{
+  "mcpServers": {
+    "AbletonMCP": {
+      "command": "uvx",
+      "args": ["ableton-mcp"]
+    }
+  }
+}
+```
+
 ## 🛠️ Stack Tecnologico
 
 - **Backend:** Flask + waitress + Demucs v4 + librosa (analisi BPM/tonalità)
@@ -130,7 +160,7 @@ Questo progetto è open source e disponibile sotto [licenza MIT](LICENSE).
 - **huchukato**
   - 🐙 [GitHub](https://github.com/huchukato)
   - 🐦 [X (Twitter)](https://twitter.com/huchukato)
-  - 🎨 [Civitai](https://civitai.com/user/huchukato) - Dai un'occhiata ai miei modelli AI!
+  - 🎨 [Civitai](https://civitai.red/user/huchukato) - Dai un'occhiata ai miei modelli AI!
 
 ## 🙏 Ringraziamenti
 

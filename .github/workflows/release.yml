@@ -35,13 +35,17 @@ jobs:
         working-directory: demucs-backend
         run: uv sync --frozen
 
-      # On Windows/Linux bundle torch CPU-only to keep the binary small
+      # On Windows/Linux bundle torch CPU-only to keep the binary small.
+      # Also remove the nvidia-* / triton packages left behind by the CUDA
+      # torch: the PyInstaller torch hook would bundle them otherwise
+      # (~7GB, over GitHub's 2GB release asset limit).
       - name: Sync backend dependencies (CPU torch)
         if: matrix.platform != 'mac'
         working-directory: demucs-backend
         run: |
           uv sync --frozen
           uv pip uninstall torch torchaudio
+          uv pip list --format=freeze | grep -E '^(nvidia|triton)' | cut -d= -f1 | xargs -r uv pip uninstall
           uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install frontend dependencies
@@ -70,7 +74,9 @@ jobs:
             --collect-submodules librosa \
             --collect-data librosa \
             --collect-submodules flask \
-            --collect-submodules waitress
+            --collect-submodules waitress \
+            --exclude-module tensorboard \
+            --exclude-module torch.utils.tensorboard
 
       - name: Build Electron app
         working-directory: demucs-gui
