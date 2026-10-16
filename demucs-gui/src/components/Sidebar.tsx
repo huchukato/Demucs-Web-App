@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Download, Search, Trash2, X } from 'lucide-react';
 import type { LibraryItem } from '../lib/api';
+import { downloadFile } from '../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -92,7 +93,10 @@ export function Sidebar({ items, activeSessionId, serverUp, onOpen, onDelete, on
             </button>
             <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
               <button
-                onClick={() => window.open(`${API_URL}/download-all/${item.session_id}`, '_blank')}
+                onClick={() => downloadFile(
+                  `${API_URL}/download-all/${item.session_id}`,
+                  `${item.track_name}-stems.zip`
+                )}
                 className="p-1 text-neutral-500 hover:text-neutral-200 rounded"
                 title="Download all stems (ZIP)"
               >

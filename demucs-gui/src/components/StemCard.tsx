@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { downloadFile } from '../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -169,7 +170,11 @@ export function StemCard({ name, url, color, waveColor, format = 'wav', muted, o
           )}
           <button
             className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 rounded-md transition-colors duration-150"
-            onClick={() => window.open(`${API_URL}${url}${format === 'mp3' ? '?as=mp3' : ''}`, '_blank')}
+            onClick={() => {
+              const filename = url.split('/').pop() || `${name}.wav`;
+              const finalName = format === 'mp3' ? filename.replace(/\.wav$/, '.mp3') : filename;
+              downloadFile(`${API_URL}${url}${format === 'mp3' ? '?as=mp3' : ''}`, finalName);
+            }}
             title={`Download ${name} stem (${format.toUpperCase()})`}
           >
             <Download className="w-4 h-4" />

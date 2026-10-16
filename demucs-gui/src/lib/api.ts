@@ -173,3 +173,23 @@ export async function clearLibrary(): Promise<void> {
     console.warn('Failed to clear library:', error);
   }
 }
+
+// Download interno: fetch + Blob (window.open in Electron apre un popup bianco)
+export async function downloadFile(url: string, filename: string): Promise<void> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+  } catch (error) {
+    console.error('Download error:', error);
+    throw error instanceof Error ? error : new Error('Download failed');
+  }
+}

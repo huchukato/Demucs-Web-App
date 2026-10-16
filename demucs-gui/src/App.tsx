@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { FileUpload } from './components/FileUpload';
 import { StemCard } from './components/StemCard';
-import { uploadAudio, checkServerStatus, cleanupSession, getLibrary, clearLibrary } from './lib/api';
+import { uploadAudio, checkServerStatus, cleanupSession, getLibrary, clearLibrary, downloadFile } from './lib/api';
 import type { LibraryItem } from './lib/api';
 import { Download, Music2, Gauge, FileMusic, Library as LibraryIcon, RotateCcw } from 'lucide-react';
 
@@ -89,7 +89,10 @@ export default function App() {
   const handleDownloadAll = () => {
     if (currentSessionId) {
       const q = format === 'mp3' ? '?format=mp3' : '';
-      window.open(`${API_URL}/download-all/${currentSessionId}${q}`, '_blank');
+      downloadFile(
+        `${API_URL}/download-all/${currentSessionId}${q}`,
+        `${trackName || 'stems'}-stems-${format}.zip`
+      );
     }
   };
 
