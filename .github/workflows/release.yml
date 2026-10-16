@@ -17,8 +17,6 @@ jobs:
             platform: mac
           - os: windows-latest
             platform: win
-          - os: ubuntu-latest
-            platform: linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -89,9 +87,6 @@ jobs:
           path: |
             demucs-gui/release/*.dmg
             demucs-gui/release/*.exe
-            demucs-gui/release/*.AppImage
-            demucs-gui/release/*.deb
-            demucs-gui/release/*.blockmap
           if-no-files-found: error
 
   release:
@@ -106,7 +101,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          name: Stemify ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body: |
             🎵 **Stemify - The Audio Splitter**
 
@@ -117,7 +112,6 @@ jobs:
             |---|---|
             | macOS (Apple Silicon) | `Stemify-*-arm64.dmg` |
             | Windows (x64) | `Stemify Setup *.exe` |
-            | Linux (x64) | `Stemify-*.AppImage` / `.deb` |
 
             The Demucs model (~84 MB) is downloaded automatically on first use.
             macOS: first launch requires right-click → Open (unsigned app).
@@ -125,6 +119,3 @@ jobs:
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
-            artifacts/**/*.AppImage
-            artifacts/**/*.deb
-            artifacts/**/*.blockmap

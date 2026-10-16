@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Play, Pause } from 'lucide-react';
+import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -9,11 +9,13 @@ interface StemCardProps {
   color: string;      // tailwind class for the dot, e.g. 'bg-pink-500'
   waveColor: string;  // hex color for the waveform, e.g. '#ec4899'
   format?: 'wav' | 'mp3';
+  muted?: boolean;
+  onToggleMute?: () => void;
 }
 
 const PEAK_BARS = 160;
 
-export function StemCard({ name, url, color, waveColor, format = 'wav' }: StemCardProps) {
+export function StemCard({ name, url, color, waveColor, format = 'wav', muted, onToggleMute }: StemCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const peaksRef = useRef<number[]>([]);
@@ -22,6 +24,11 @@ export function StemCard({ name, url, color, waveColor, format = 'wav' }: StemCa
   const [progress, setProgress] = useState(0);   // 0..1
   const [duration, setDuration] = useState(0);
   const [ready, setReady] = useState(false);
+
+  // Apply mute to the audio element
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = !!muted;
+  }, [muted]);
 
   const drawWave = useCallback((pos: number) => {
     const canvas = canvasRef.current;
@@ -116,7 +123,7 @@ export function StemCard({ name, url, color, waveColor, format = 'wav' }: StemCa
       audio.pause();
       setPlaying(false);
     } else {
-      audio.play();
+      audio.play().catch(() => {});
       setPlaying(true);
     }
   };
@@ -138,19 +145,36 @@ export function StemCard({ name, url, color, waveColor, format = 'wav' }: StemCa
   };
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-neutral-700 transition-colors duration-150">
+    <div className={`bg-neutral-900 border rounded-lg p-4 transition-colors duration-150 ${
+      muted ? 'border-neutral-900 opacity-60' : 'border-neutral-800 hover:border-neutral-700'
+    }`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className={`w-2 h-2 rounded-full ${color}`} />
           <h3 className="text-sm font-medium capitalize">{name}</h3>
         </div>
-        <button
-          className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 rounded-md transition-colors duration-150"
-          onClick={() => window.open(`${API_URL}${url}${format === 'mp3' ? '?as=mp3' : ''}`, '_blank')}
-          title={`Download ${name} stem (${format.toUpperCase()})`}
-        >
-          <Download className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {onToggleMute && (
+            <button
+              className={`p-1.5 rounded-md transition-colors duration-150 ${
+                muted
+                  ? 'text-pink-400 bg-pink-500/10'
+                  : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800'
+              }`}
+              onClick={onToggleMute}
+              title={muted ? `Unmute ${name}` : `Mute ${name}`}
+            >
+              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+          )}
+          <button
+            className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 rounded-md transition-colors duration-150"
+            onClick={() => window.open(`${API_URL}${url}${format === 'mp3' ? '?as=mp3' : ''}`, '_blank')}
+            title={`Download ${name} stem (${format.toUpperCase()})`}
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -190,7 +214,7 @@ export function StemCard({ name, url, color, waveColor, format = 'wav' }: StemCa
         src={`${API_URL}${url}`}
         className="stem-audio"
         onEnded={() => { setPlaying(false); setProgress(0); drawWave(0); }}
-        preload="none"
+        preload="auto"
       />
     </div>
   );

@@ -9,9 +9,16 @@ interface FileUploadProps {
   hasResult: boolean;
 }
 
-export function FileUpload({ isProcessing, onFileUpload, progress, progressMessage, hasResult }: FileUploadProps) {
-  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
 
+const ACCEPTED_EXTENSIONS = ['mp3', 'wav', 'flac', 'ogg', 'oga', 'm4a', 'aac', 'aiff', 'aif', 'opus'];
+
+function isAccepted(file: File): boolean {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  return ACCEPTED_EXTENSIONS.includes(ext) || file.type.startsWith('audio/');
+}
+
+export function FileUpload({ isProcessing, onFileUpload, progress, progressMessage, hasResult }: FileUploadProps) {
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -24,14 +31,18 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
 
       if (isProcessing) return;
 
-      const files = Array.from(e.dataTransfer.files);
-      const mp3File = files.find(file => file.type === 'audio/mpeg');
+      const file = Array.from(e.dataTransfer.files)[0];
+      if (!file) return;
 
-      if (mp3File && mp3File.size <= MAX_FILE_SIZE) {
-        onFileUpload(mp3File);
-      } else {
-        alert('Please upload an MP3 file under 20MB');
+      if (!isAccepted(file)) {
+        alert('Unsupported file format. Supported: MP3, WAV, FLAC, OGG, M4A, AAC, AIFF, OPUS');
+        return;
       }
+      if (file.size > MAX_FILE_SIZE) {
+        alert('File too large. Maximum size is 100MB.');
+        return;
+      }
+      onFileUpload(file);
     },
     [isProcessing, onFileUpload]
   );
@@ -39,11 +50,16 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file && file.size <= MAX_FILE_SIZE) {
-        onFileUpload(file);
-      } else {
-        alert('Please upload an MP3 file under 20MB');
+      if (!file) return;
+      if (!isAccepted(file)) {
+        alert('Unsupported file format. Supported: MP3, WAV, FLAC, OGG, M4A, AAC, AIFF, OPUS');
+        return;
       }
+      if (file.size > MAX_FILE_SIZE) {
+        alert('File too large. Maximum size is 100MB.');
+        return;
+      }
+      onFileUpload(file);
     },
     [onFileUpload]
   );
@@ -56,7 +72,7 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
           id="file-upload-compact"
           type="file"
           className="hidden"
-          accept="audio/mpeg"
+          accept={ACCEPTED_EXTENSIONS.map(e => `.${e}`).join(',')}
           onChange={handleFileSelect}
         />
         <button
@@ -64,7 +80,7 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
           className="w-full border border-dashed border-neutral-800 hover:border-neutral-600 rounded-lg py-3 flex items-center justify-center gap-2 text-sm text-neutral-500 hover:text-neutral-300 transition-colors duration-150"
         >
           <Upload className="w-4 h-4" />
-          Drop another MP3 here or click to browse
+          Drop another track here or click to browse
         </button>
       </div>
     );
@@ -75,8 +91,8 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
       <div
         className={`
           flex flex-col items-center justify-center w-full h-56
-          border border-dashed rounded-lg backdrop-blur-sm
-          ${isProcessing ? 'border-neutral-800 bg-neutral-900/50' : 'border-neutral-700 bg-neutral-900/60 hover:border-neutral-500 hover:bg-neutral-900/80 cursor-pointer'}
+          border border-dashed rounded-lg backdrop-blur-md
+          ${isProcessing ? 'border-neutral-800 bg-neutral-900/40' : 'border-neutral-600 bg-neutral-900/30 hover:border-neutral-400 hover:bg-neutral-900/50 cursor-pointer'}
           transition-colors duration-150
         `}
         onDragEnter={handleDrag}
@@ -109,7 +125,7 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
                 id="file-upload"
                 type="file"
                 className="hidden"
-                accept="audio/mpeg"
+                accept={ACCEPTED_EXTENSIONS.map(e => `.${e}`).join(',')}
                 onChange={handleFileSelect}
                 disabled={isProcessing}
               />
@@ -120,7 +136,7 @@ export function FileUpload({ isProcessing, onFileUpload, progress, progressMessa
                 <Upload className="w-6 h-6 text-neutral-300" />
               </div>
               <p className="text-base font-medium mb-1">Drop your track here</p>
-              <p className="text-sm text-neutral-500">MP3 files up to 20MB</p>
+              <p className="text-sm text-neutral-500">MP3, WAV, FLAC, OGG, M4A, AAC, AIFF, OPUS — up to 100MB</p>
             </>
           )}
         </div>

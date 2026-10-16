@@ -16,9 +16,9 @@ CORS(app)
 
 @app.errorhandler(413)
 def file_too_large(error):
-    return jsonify({"error": "File is too large. Maximum size is 20MB."}), 413
+    return jsonify({"error": "File is too large. Maximum size is 100MB."}), 413
 
-app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20MB in bytes
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB in bytes
 
 # Define base directories
 BASE_DIR = Path(__file__).parent.absolute()

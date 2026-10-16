@@ -38,13 +38,9 @@ interface JobStatus {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export async function uploadAudio(file: File, onProgress?: (progress: number, message: string) => void): Promise<ProcessedStems> {
-  // Validazione iniziale del file
+  // Validazione iniziale del file (il formato lo valida già FileUpload)
   if (!file) {
     throw new Error('No file provided');
-  }
-
-  if (!file.type.includes('audio')) {
-    throw new Error('Invalid file type. Please upload an audio file.');
   }
 
   const formData = new FormData();
